@@ -1,0 +1,27 @@
+# Node / TypeScript
+node_modules/
+*.log
+
+# Foundry
+out/
+cache/
+broadcast/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+
+# macOS / Xcode / Swift
+.DS_Store
+DerivedData/
+*.xcuserdata/
+*.xcuserstate
+*.moved-aside
+*.resultbundle/
+.swiftpm/
+.build/

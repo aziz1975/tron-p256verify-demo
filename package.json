@@ -1,0 +1,32 @@
+{
+  "name": "tron-p256verify-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "node --import tsx --test 'relayer/test/**/*.test.ts'",
+    "test:contracts": "forge test -vv",
+    "relayer": "node --import tsx relayer/src/server.ts",
+    "nile:check": "node --import tsx relayer/src/check-nile.ts",
+    "nile:test:probe": "node --import tsx relayer/src/test-nile-probe.ts",
+    "nile:deploy:probe": "node --import tsx relayer/src/deploy.ts probe",
+    "nile:deploy:wallet": "node --import tsx relayer/src/deploy.ts wallet"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "dotenv": "^17.2.1",
+    "ethers": "^6.15.0",
+    "express": "^5.1.0",
+    "tronweb": "^6.4.0",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "ws": "^8.21.3"
+  }
+}
