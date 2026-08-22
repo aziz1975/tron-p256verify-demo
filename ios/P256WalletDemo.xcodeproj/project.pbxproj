@@ -15,6 +15,7 @@
 		A00000000000000000000107 /* OperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000207; };
 		A00000000000000000000108 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000210; };
 		A00000000000000000000109 /* P256WalletDemo.app in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000208; };
+		A00000000000000000000110 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000212; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +34,7 @@
 		A00000000000000000000209 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = P256WalletDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000210 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
 		A00000000000000000000211 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A00000000000000000000212 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,7 +44,7 @@
 
 /* Begin PBXGroup section */
 		A00000000000000000000002 = {isa = PBXGroup; children = (A00000000000000000000601, A00000000000000000000602, A00000000000000000000603, A00000000000000000000604,); sourceTree = "<group>"; };
-		A00000000000000000000601 = {isa = PBXGroup; path = P256WalletDemo; sourceTree = "<group>"; children = (A00000000000000000000201,A00000000000000000000202,A00000000000000000000203,A00000000000000000000204,A00000000000000000000205,A00000000000000000000206,A00000000000000000000211,); };
+		A00000000000000000000601 = {isa = PBXGroup; path = P256WalletDemo; sourceTree = "<group>"; children = (A00000000000000000000201,A00000000000000000000202,A00000000000000000000203,A00000000000000000000204,A00000000000000000000205,A00000000000000000000206,A00000000000000000000211,A00000000000000000000212,); };
 		A00000000000000000000602 = {isa = PBXGroup; path = P256WalletDemoTests; sourceTree = "<group>"; children = (A00000000000000000000207,); };
 		A00000000000000000000603 = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (A00000000000000000000208,A00000000000000000000209,); };
 		A00000000000000000000604 = {isa = PBXGroup; name = Frameworks; sourceTree = "<group>"; children = (A00000000000000000000210,); };
@@ -58,7 +60,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A00000000000000000000521 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000521 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000110,); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000522 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
@@ -74,8 +76,8 @@
 /* Begin XCBuildConfiguration section */
 		A00000000000000000000901 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; ENABLE_TESTABILITY = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 5.0;}; name = Debug; };
 		A00000000000000000000902 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0;}; name = Release; };
-		A00000000000000000000903 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = P256WalletDemo/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.p256walletdemo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2";}; name = Debug; };
-		A00000000000000000000904 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = P256WalletDemo/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.p256walletdemo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2";}; name = Release; };
+		A00000000000000000000903 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = P256WalletDemo/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.p256walletdemo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2";}; name = Debug; };
+		A00000000000000000000904 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = P256WalletDemo/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.p256walletdemo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2";}; name = Release; };
 		A00000000000000000000905 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.P256WalletDemoTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/P256WalletDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/P256WalletDemo";}; name = Debug; };
 		A00000000000000000000906 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = 9AJKD9KA2B; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.aziz.P256WalletDemoTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/P256WalletDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/P256WalletDemo";}; name = Release; };
 /* End XCBuildConfiguration section */

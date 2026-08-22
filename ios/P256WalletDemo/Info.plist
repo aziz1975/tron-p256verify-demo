@@ -9,8 +9,16 @@
   <key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
   <key>CFBundleDisplayName</key><string>P256 Wallet Demo</string>
+  <key>CFBundleIconName</key><string>AppIcon</string>
   <key>NSFaceIDUsageDescription</key><string>Approve P-256 wallet operations with Face ID.</string>
   <key>NSLocalNetworkUsageDescription</key><string>Connect to the demo relayer on your local network.</string>
   <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
   <key>UILaunchScreen</key><dict/>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
 </dict></plist>
