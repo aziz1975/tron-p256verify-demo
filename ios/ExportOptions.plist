@@ -9,9 +9,16 @@
     <key>method</key>
     <string>app-store-connect</string>
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
+    <key>signingCertificate</key>
+    <string>Apple Distribution</string>
     <key>teamID</key>
     <string>9AJKD9KA2B</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.aziz.p256walletdemo</key>
+        <string>P256WalletDemo App Store</string>
+    </dict>
     <key>uploadSymbols</key>
     <true/>
 </dict>

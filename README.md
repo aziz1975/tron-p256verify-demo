@@ -121,9 +121,12 @@ The manually triggered `iOS TestFlight` workflow runs the unit tests on a GitHub
 APP_STORE_CONNECT_ISSUER_ID
 APP_STORE_CONNECT_KEY_ID
 APP_STORE_CONNECT_PRIVATE_KEY
+BUILD_CERTIFICATE_BASE64
+BUILD_PROVISION_PROFILE_BASE64
+P12_PASSWORD
 ```
 
-The private-key secret must contain the complete downloaded `AuthKey_*.p8` contents. Start a build from **Actions → iOS TestFlight → Run workflow**. Each run uses the GitHub run number as the Apple build number.
+The API private-key secret must contain the complete downloaded `AuthKey_*.p8` contents. The build certificate and provisioning profile secrets are their respective files encoded as single-line base64, while `P12_PASSWORD` is the password used when exporting the distribution certificate. Start a build from **Actions → iOS TestFlight → Run workflow**. Each run uses the GitHub run number as the Apple build number.
 
 ## Security and scope limitations
 
