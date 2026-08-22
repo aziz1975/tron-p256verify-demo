@@ -104,7 +104,7 @@ Before broadcasting, it fetches the wallet nonce and public key, checks the dead
 ## iOS app
 
 1. Open `ios/P256WalletDemo.xcodeproj` in Xcode 16 or later.
-2. Select the app target, choose your Apple development team, and change the bundle identifier if Xcode requests it.
+2. Select the app target and confirm automatic signing uses team `9AJKD9KA2B` with the registered bundle identifier `com.aziz.p256walletdemo`.
 3. Run tests first; `OperationTests` must match the same digest as Solidity and TypeScript.
 4. Run on a physical iPhone for Secure Enclave assurance. The Simulator automatically uses an ephemeral software P-256 key.
 5. Tap **Create or load signing key**. On device, its opaque representation is persisted in Keychain and signing requires user presence.
@@ -112,6 +112,18 @@ Before broadcasting, it fetches the wallet nonce and public key, checks the dead
 7. Use **Approve, sign, and relay** only after the relayer and Nile wallet are deliberately configured.
 
 The app signs a `SHA256.Digest` directly, converts the CryptoKit signature to fixed-width `r || s`, and normalizes `s` to the lower half-order. It never exports the private key.
+
+### TestFlight from GitHub Actions
+
+The manually triggered `iOS TestFlight` workflow runs the unit tests on a GitHub-hosted macOS 26 runner, archives with automatic signing, and uploads to App Store Connect. Configure these repository Actions secrets before running it:
+
+```text
+APP_STORE_CONNECT_ISSUER_ID
+APP_STORE_CONNECT_KEY_ID
+APP_STORE_CONNECT_PRIVATE_KEY
+```
+
+The private-key secret must contain the complete downloaded `AuthKey_*.p8` contents. Start a build from **Actions → iOS TestFlight → Run workflow**. Each run uses the GitHub run number as the Apple build number.
 
 ## Security and scope limitations
 
@@ -122,4 +134,3 @@ The app signs a `SHA256.Digest` directly, converts the CryptoKit signature to fi
 - Local HTTP is allowed only to simplify LAN testing; use TLS for any non-local deployment.
 - The iOS UI deliberately accepts 20-byte hex addresses to keep digest construction unambiguous.
 - The Nile chain ID is fixed at decimal `3448148188` (`0xcd8690dc`) in both the app and relayer.
-

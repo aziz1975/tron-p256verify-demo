@@ -1,0 +1,91 @@
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  test-archive-upload:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      PROJECT: ios/P256WalletDemo.xcodeproj
+      SCHEME: P256WalletDemo
+      ARCHIVE_PATH: ${{ runner.temp }}/P256WalletDemo.xcarchive
+      EXPORT_PATH: ${{ runner.temp }}/P256WalletDemoExport
+      API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify required secrets
+        env:
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          test -n "$API_KEY_ID"
+          test -n "$API_ISSUER_ID"
+          test -n "$API_PRIVATE_KEY"
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Run iOS unit tests
+        run: |
+          xcodebuild test \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16e' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Install App Store Connect API key
+        env:
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          KEY_DIRECTORY="$HOME/.appstoreconnect/private_keys"
+          KEY_PATH="$KEY_DIRECTORY/AuthKey_${API_KEY_ID}.p8"
+          mkdir -p "$KEY_DIRECTORY"
+          printf '%s' "$API_PRIVATE_KEY" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          echo "API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Archive signed application
+        run: |
+          xcodebuild archive \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+
+      - name: Export and upload to App Store Connect
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+      - name: Upload diagnostic logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-distribution-logs-${{ github.run_number }}
+          path: ${{ runner.temp }}/P256WalletDemoExport
+          if-no-files-found: ignore
+          retention-days: 7

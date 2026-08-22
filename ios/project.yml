@@ -1,10 +1,11 @@
 name: P256WalletDemo
 options:
-  bundleIdPrefix: dev.demo
+  bundleIdPrefix: com.aziz
   deploymentTarget:
     iOS: "17.0"
 settings:
   base:
+    DEVELOPMENT_TEAM: 9AJKD9KA2B
     SWIFT_VERSION: 5.10
 targets:
   P256WalletDemo:
@@ -21,7 +22,7 @@ targets:
           NSAllowsLocalNetworking: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.demo.P256WalletDemo
+        PRODUCT_BUNDLE_IDENTIFIER: com.aziz.p256walletdemo
         CODE_SIGN_STYLE: Automatic
   P256WalletDemoTests:
     type: bundle.unit-test
@@ -29,4 +30,12 @@ targets:
     sources: [P256WalletDemoTests]
     dependencies:
       - target: P256WalletDemo
-
+schemes:
+  P256WalletDemo:
+    build:
+      targets:
+        P256WalletDemo: all
+        P256WalletDemoTests: [test]
+    test:
+      targets:
+        - P256WalletDemoTests
