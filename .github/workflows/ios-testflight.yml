@@ -17,8 +17,6 @@ jobs:
     env:
       PROJECT: ios/P256WalletDemo.xcodeproj
       SCHEME: P256WalletDemo
-      ARCHIVE_PATH: ${{ runner.temp }}/P256WalletDemo.xcarchive
-      EXPORT_PATH: ${{ runner.temp }}/P256WalletDemoExport
       API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
 
@@ -63,7 +61,7 @@ jobs:
             -scheme "$SCHEME" \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$ARCHIVE_PATH" \
+            -archivePath "$RUNNER_TEMP/P256WalletDemo.xcarchive" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$API_KEY_ID" \
@@ -73,8 +71,8 @@ jobs:
       - name: Export and upload to App Store Connect
         run: |
           xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportPath "$EXPORT_PATH" \
+            -archivePath "$RUNNER_TEMP/P256WalletDemo.xcarchive" \
+            -exportPath "$RUNNER_TEMP/P256WalletDemoExport" \
             -exportOptionsPlist ios/ExportOptions.plist \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$API_KEY_PATH" \
