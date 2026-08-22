@@ -7,6 +7,11 @@ settings:
   base:
     DEVELOPMENT_TEAM: 9AJKD9KA2B
     SWIFT_VERSION: 5.10
+  configs:
+    Debug:
+      ENABLE_TESTABILITY: true
+      ONLY_ACTIVE_ARCH: true
+      SWIFT_OPTIMIZATION_LEVEL: -Onone
 targets:
   P256WalletDemo:
     type: application
