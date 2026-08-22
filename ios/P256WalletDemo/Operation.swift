@@ -24,7 +24,7 @@ enum OperationEncoder {
         return try bytes.leftPadded(to: 32)
     }
 
-    static func digest(wallet: String, destination: String, valueSun: UInt64, data: Data, nonce: UInt64, deadline: UInt64) throws -> Data {
+    static func signingPayload(wallet: String, destination: String, valueSun: UInt64, data: Data, nonce: UInt64, deadline: UInt64) throws -> Data {
         var encoded = Data()
         encoded += sha256(Data(type.utf8))
         encoded += try addressWord(wallet)
@@ -34,7 +34,10 @@ enum OperationEncoder {
         encoded += sha256(data)
         encoded += nonce.abiWord
         encoded += deadline.abiWord
-        return sha256(encoded)
+        return encoded
+    }
+
+    static func digest(wallet: String, destination: String, valueSun: UInt64, data: Data, nonce: UInt64, deadline: UInt64) throws -> Data {
+        sha256(try signingPayload(wallet: wallet, destination: destination, valueSun: valueSun, data: data, nonce: nonce, deadline: deadline))
     }
 }
-

@@ -5,10 +5,10 @@ import Security
 
 protocol P256Signer {
     var publicKeyX963: Data { get }
-    func sign(digest: Data) throws -> (r: Data, s: Data)
+    func sign(message: Data) throws -> (r: Data, s: Data)
 }
 
-enum SignerError: Error { case secureEnclaveUnavailable, invalidDigest, invalidSignature }
+enum SignerError: Error { case secureEnclaveUnavailable, invalidSignature }
 
 private let p256Order = try! Data(hex: "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551")
 private let p256HalfOrder = try! Data(hex: "7fffffff800000007fffffffffffffffde737d56d38bcf4c27a1dce5617e3192a8")
@@ -56,9 +56,8 @@ final class SecureEnclaveP256Signer: P256Signer {
 
     var publicKeyX963: Data { key.publicKey.x963Representation }
 
-    func sign(digest: Data) throws -> (r: Data, s: Data) {
-        guard digest.count == 32 else { throw SignerError.invalidDigest }
-        let signature = try key.signature(for: SHA256.Digest(bytes: digest))
+    func sign(message: Data) throws -> (r: Data, s: Data) {
+        let signature = try key.signature(for: message)
         return try normalizedRaw(signature.rawRepresentation)
     }
 
@@ -80,9 +79,7 @@ final class SecureEnclaveP256Signer: P256Signer {
 final class SoftwareP256Signer: P256Signer {
     private let key = P256.Signing.PrivateKey()
     var publicKeyX963: Data { key.publicKey.x963Representation }
-    func sign(digest: Data) throws -> (r: Data, s: Data) {
-        guard digest.count == 32 else { throw SignerError.invalidDigest }
-        return try normalizedRaw(key.signature(for: SHA256.Digest(bytes: digest)).rawRepresentation)
+    func sign(message: Data) throws -> (r: Data, s: Data) {
+        return try normalizedRaw(key.signature(for: message).rawRepresentation)
     }
 }
-

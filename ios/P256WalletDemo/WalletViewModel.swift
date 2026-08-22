@@ -31,8 +31,8 @@ final class WalletViewModel: ObservableObject {
             guard let value = UInt64(valueSun), let operationNonce = UInt64(nonce) else { throw HexError.invalid }
             let deadline = UInt64(Date().timeIntervalSince1970) + 300
             let calldata = Data()
-            let digest = try OperationEncoder.digest(wallet: wallet, destination: destination, valueSun: value, data: calldata, nonce: operationNonce, deadline: deadline)
-            let signature = try signer.sign(digest: digest)
+            let signingPayload = try OperationEncoder.signingPayload(wallet: wallet, destination: destination, valueSun: value, data: calldata, nonce: operationNonce, deadline: deadline)
+            let signature = try signer.sign(message: signingPayload)
             let operation = WalletOperation(wallet: wallet, destination: destination, valueSun: String(value), data: calldata.hex, nonce: String(operationNonce), deadline: String(deadline), r: signature.r.hex, s: signature.s.hex)
             var request = URLRequest(url: URL(string: relayerURL + "/relay")!)
             request.httpMethod = "POST"; request.setValue("application/json", forHTTPHeaderField: "Content-Type")

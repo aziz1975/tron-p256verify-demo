@@ -111,7 +111,7 @@ Before broadcasting, it fetches the wallet nonce and public key, checks the dead
 6. Enter the deployed wallet and destination as 20-byte `0x` hex addresses, the on-chain nonce, and the relayer LAN URL.
 7. Use **Approve, sign, and relay** only after the relayer and Nile wallet are deliberately configured.
 
-The app signs a `SHA256.Digest` directly, converts the CryptoKit signature to fixed-width `r || s`, and normalizes `s` to the lower half-order. It never exports the private key.
+The app passes the canonical encoded operation to CryptoKit, which hashes it once with SHA-256 while signing. It converts the signature to fixed-width `r || s` and normalizes `s` to the lower half-order. It never exports the private key.
 
 ### TestFlight from GitHub Actions
 
