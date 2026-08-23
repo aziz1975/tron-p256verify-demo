@@ -1,6 +1,6 @@
 import { TronWeb } from "tronweb";
 
-export const NILE_FULL_HOST = process.env.NILE_FULL_HOST ?? "https://api.nileex.io";
+export const NILE_FULL_HOST = process.env.NILE_FULL_HOST ?? "https://nile.trongrid.io";
 
 export function createReadOnlyTronWeb(): TronWeb {
   return new TronWeb({ fullHost: NILE_FULL_HOST });

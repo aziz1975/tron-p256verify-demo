@@ -11,11 +11,17 @@ struct ContentView: View {
                     if !model.publicKey.isEmpty { Text(model.publicKey).font(.caption).textSelection(.enabled) }
                 }
                 Section("Nile operation (20-byte hex addresses)") {
-                    TextField("Relayer URL", text: $model.relayerURL).textInputAutocapitalization(.never)
-                    TextField("Wallet 0x address", text: $model.wallet).textInputAutocapitalization(.never)
-                    TextField("Destination 0x address", text: $model.destination).textInputAutocapitalization(.never)
-                    TextField("Value in SUN", text: $model.valueSun).keyboardType(.numberPad)
-                    TextField("Wallet nonce", text: $model.nonce).keyboardType(.numberPad)
+                    LabeledField("Relayer URL", placeholder: "http://192.168.1.19:8787", text: $model.relayerURL)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                    LabeledField("Wallet address", placeholder: "0x…", text: $model.wallet)
+                        .textInputAutocapitalization(.never)
+                    LabeledField("Destination address", placeholder: "0x…", text: $model.destination)
+                        .textInputAutocapitalization(.never)
+                    LabeledField("Value (SUN)", placeholder: "0", text: $model.valueSun)
+                        .keyboardType(.numberPad)
+                    LabeledField("Wallet nonce", placeholder: "0", text: $model.nonce)
+                        .keyboardType(.numberPad)
                     Button("Approve, sign, and relay") { Task { await model.signAndRelay() } }
                 }
                 Section("Status") { Text(model.status).textSelection(.enabled) }
@@ -26,3 +32,24 @@ struct ContentView: View {
     }
 }
 
+private struct LabeledField: View {
+    let label: String
+    let placeholder: String
+    @Binding var text: String
+
+    init(_ label: String, placeholder: String, text: Binding<String>) {
+        self.label = label
+        self.placeholder = placeholder
+        self._text = text
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            TextField(placeholder, text: $text)
+                .accessibilityLabel(label)
+        }
+    }
+}

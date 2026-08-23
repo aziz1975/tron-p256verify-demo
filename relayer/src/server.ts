@@ -17,6 +17,28 @@ const app = express();
 app.use(express.json({ limit: "32kb" }));
 app.get("/health", (_request, response) => response.json({ ok: true, network: "nile", broadcasting: process.env.CONFIRM_NILE_BROADCAST === "I_UNDERSTAND" }));
 
+function upstreamStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null || !("response" in error)) return undefined;
+  const response = (error as { response?: { status?: unknown } }).response;
+  return typeof response?.status === "number" ? response.status : undefined;
+}
+
+async function readFromNile<T>(label: string, operation: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      const status = upstreamStatus(error);
+      if (status !== 429 && (status === undefined || status < 500)) break;
+      console.warn(`${label} read failed with HTTP ${status}; attempt ${attempt}/3`);
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+    }
+  }
+  throw new Error(`${label} read failed: ${lastError instanceof Error ? lastError.message : "Unknown Nile error"}`);
+}
+
 app.post("/relay", async (request, response) => {
   try {
     requireBroadcastConfirmation();
@@ -25,7 +47,11 @@ app.post("/relay", async (request, response) => {
     const walletAddress = toTronAddress(tronWeb, body.wallet);
     const destinationAddress = toTronAddress(tronWeb, body.destination);
     const wallet = await tronWeb.contract(walletAbi as never, walletAddress);
-    const [onChainNonce, x, y] = await Promise.all([wallet.nonce().call(), wallet.publicKeyX().call(), wallet.publicKeyY().call()]);
+    // Keep these reads sequential: the public Nile endpoint may throttle bursts of
+    // simultaneous constant-contract requests.
+    const onChainNonce = await readFromNile("nonce", async () => String(await wallet.nonce().call()));
+    const x = await readFromNile("publicKeyX", async () => String(await wallet.publicKeyX().call()));
+    const y = await readFromNile("publicKeyY", async () => String(await wallet.publicKeyY().call()));
     if (BigInt(onChainNonce.toString()) !== BigInt(body.nonce)) throw new Error("Nonce does not match wallet");
     if (BigInt(body.deadline) <= BigInt(Math.floor(Date.now() / 1000))) throw new Error("Operation has expired");
 
@@ -40,6 +66,7 @@ app.post("/relay", async (request, response) => {
       .send({ feeLimit: Number(process.env.FEE_LIMIT_SUN ?? "150000000"), shouldPollResponse: false });
     response.status(202).json({ txid, digest });
   } catch (error) {
+    console.error("Relay failed:", error);
     response.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 });

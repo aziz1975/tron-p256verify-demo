@@ -3,10 +3,10 @@ import Foundation
 
 @MainActor
 final class WalletViewModel: ObservableObject {
-    @Published var relayerURL = "http://192.168.1.2:8787"
-    @Published var wallet = "0x1111111111111111111111111111111111111111"
-    @Published var destination = "0x2222222222222222222222222222222222222222"
-    @Published var valueSun = "1"
+    @Published var relayerURL = "http://192.168.1.19:8787"
+    @Published var wallet = "0x989b8c5747943f0826396dbd7c57abc3b4b3ebb0"
+    @Published var destination = ""
+    @Published var valueSun = "0"
     @Published var nonce = "0"
     @Published var status = "Create a key to begin"
     @Published var publicKey = ""
