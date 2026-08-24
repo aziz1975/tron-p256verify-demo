@@ -164,6 +164,8 @@ The operation fields appear in this order:
 4. **Value (SUN)** — a decimal SUN amount. `0` performs a zero-value call; `1 TRX = 1,000,000 SUN`, so `10,000,000` means 10 TRX.
 5. **Wallet nonce** — must equal the current on-chain nonce; it is currently `2` for this deployment.
 
+Both address fields require exactly `0x` followed by 40 hexadecimal characters. Do not enter a TRON Base58Check address beginning with `T` in the current iOS UI; convert it to the corresponding 20-byte `0x` form first.
+
 Tap **Create or load signing key** first and confirm the status says **Secure Enclave key ready**. Use **Approve, sign, and relay** only after the relayer and Nile wallet are deliberately configured. The app's `Submitted` status reports relayer acceptance and a transaction ID; it does not currently poll the Nile receipt or prove successful execution.
 
 The app passes the canonical encoded operation to CryptoKit, which hashes it once with SHA-256 while signing. It converts the signature to fixed-width `r || s` and normalizes `s` to the lower half-order. It never exports the private key.
@@ -182,7 +184,7 @@ No local modern Mac is required. The manually triggered [iOS TestFlight workflow
 8. Exports and uploads the IPA to App Store Connect.
 9. Deletes the temporary signing keychain even if the job fails.
 
-The workflow has been exercised successfully through App Store Connect upload; version `1.0`, build `9` reached **Ready to Test** in the `Personal Testing` internal group.
+The workflow has been exercised successfully through App Store Connect upload. Version `1.0`, builds `9` and `10`, reached **Testing** status in the `Personal Testing` internal group, which contains the physical-iPhone tester.
 
 Configure these repository Actions secrets before running it:
 
@@ -247,6 +249,7 @@ After Apple finishes processing an upload:
 4. Confirm the processed build is present and shows **Ready to Test**.
 5. Open the group's **Testers** tab, invite the App Store Connect account, and confirm the group shows one tester and one build.
 6. On the physical iPhone, install Apple's TestFlight app, sign in with the same Apple Account, accept the invitation, and install P256 Wallet Demo.
+7. For subsequent builds, open P256 Wallet Demo in TestFlight and tap **Update**. Do not delete the existing app first; an in-place update preserves the existing installation and its Secure Enclave/Keychain signing-key reference. After updating, tap **Create or load signing key** and confirm **Secure Enclave key ready** before signing another operation.
 
 Internal TestFlight builds expire after 90 days. Running the workflow again creates a new build number and upload.
 
