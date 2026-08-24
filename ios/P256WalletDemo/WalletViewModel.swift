@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 final class WalletViewModel: ObservableObject {
     @Published var relayerURL = "http://192.168.1.19:8787"
-    @Published var wallet = "0x989b8c5747943f0826396dbd7c57abc3b4b3ebb0"
+    @Published var wallet = "TPt83tvjrFjKTPTv8AEZEk4KabHvcEWVQV"
     @Published var destination = ""
     @Published var valueSun = "0"
     @Published var nonce = "0"
@@ -31,9 +31,11 @@ final class WalletViewModel: ObservableObject {
             guard let value = UInt64(valueSun), let operationNonce = UInt64(nonce) else { throw HexError.invalid }
             let deadline = UInt64(Date().timeIntervalSince1970) + 300
             let calldata = Data()
-            let signingPayload = try OperationEncoder.signingPayload(wallet: wallet, destination: destination, valueSun: value, data: calldata, nonce: operationNonce, deadline: deadline)
+            let normalizedWallet = try TronAddress.normalized(wallet)
+            let normalizedDestination = try TronAddress.normalized(destination)
+            let signingPayload = try OperationEncoder.signingPayload(wallet: normalizedWallet, destination: normalizedDestination, valueSun: value, data: calldata, nonce: operationNonce, deadline: deadline)
             let signature = try signer.sign(message: signingPayload)
-            let operation = WalletOperation(wallet: wallet, destination: destination, valueSun: String(value), data: calldata.hex, nonce: String(operationNonce), deadline: String(deadline), r: signature.r.hex, s: signature.s.hex)
+            let operation = WalletOperation(wallet: normalizedWallet, destination: normalizedDestination, valueSun: String(value), data: calldata.hex, nonce: String(operationNonce), deadline: String(deadline), r: signature.r.hex, s: signature.s.hex)
             var request = URLRequest(url: URL(string: relayerURL + "/relay")!)
             request.httpMethod = "POST"; request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(operation)

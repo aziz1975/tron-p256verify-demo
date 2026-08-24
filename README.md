@@ -79,11 +79,7 @@ The following deployment steps require explicit approval because they broadcast 
    CONFIRM_NILE_BROADCAST=I_UNDERSTAND npm run nile:deploy:wallet
    ```
 
-5. Convert the deployed Base58Check wallet address to its 20-byte `0x` form for the iOS screen. TronWeb conversion is:
-
-   ```js
-   `0x${tronWeb.address.toHex(base58Address).slice(2)}`
-   ```
+5. Enter the deployed Base58Check wallet address directly in the iOS screen.
 
 6. Before testing a nonzero value transfer, fund the deployed wallet with a very small amount of Nile test TRX. The wallet was still unfunded after the zero-value tests documented below.
 
@@ -123,12 +119,12 @@ If the relayer runs inside a virtual machine, a NAT-only address such as `10.0.2
 
 For the confirmed tests, the bridged VM address was `192.168.1.19`, making the relayer URL `http://192.168.1.19:8787`. This DHCP address may change after a reboot; re-check the VM's LAN address rather than treating it as permanent. Verify reachability from the iPhone in Safari with `http://<vm-lan-ip>:8787/health`.
 
-`POST /relay` accepts decimal integers as strings and 20-byte hex addresses:
+`POST /relay` accepts decimal integers as strings and either TRON Base58Check or 20-byte hex addresses:
 
 ```json
 {
-  "wallet": "0x1111111111111111111111111111111111111111",
-  "destination": "0x2222222222222222222222222222222222222222",
+  "wallet": "TBXSw8fM4jpQkGc6zZjsVABFpVN7UvXPdV",
+  "destination": "TD5gsCwxykWsLN9aPrq2TAfNjByuZKYp4E",
   "valueSun": "1",
   "data": "0x",
   "nonce": "0",
@@ -159,12 +155,12 @@ On a physical iPhone, tap **Create or load signing key**. The opaque key represe
 The operation fields appear in this order:
 
 1. **Relayer URL** — for example, `http://192.168.1.19:8787` on the confirmed LAN.
-2. **Wallet address** — `0x989b8c5747943f0826396dbd7c57abc3b4b3ebb0` for this deployment.
-3. **Destination address** — a 20-byte `0x` address; the confirmed recipient was `0x9cdeccbed8527dca387ee1116bc3915de88d714a`.
+2. **Wallet address** — `TPt83tvjrFjKTPTv8AEZEk4KabHvcEWVQV` for this deployment.
+3. **Destination address** — a TRON Base58Check address; the confirmed recipient was `TQGfKPHs3AwiBT44ibkCU64u1G4ttojUXU`.
 4. **Value (SUN)** — a decimal SUN amount. `0` performs a zero-value call; `1 TRX = 1,000,000 SUN`, so `10,000,000` means 10 TRX.
 5. **Wallet nonce** — must equal the current on-chain nonce; it is currently `2` for this deployment.
 
-Both address fields require exactly `0x` followed by 40 hexadecimal characters. Do not enter a TRON Base58Check address beginning with `T` in the current iOS UI; convert it to the corresponding 20-byte `0x` form first.
+Both address fields require a valid TRON Base58Check address beginning with `T`. The app verifies the network prefix and checksum, then decodes the address for canonical digest construction.
 
 Tap **Create or load signing key** first and confirm the status says **Secure Enclave key ready**. Use **Approve, sign, and relay** only after the relayer and Nile wallet are deliberately configured. The app's `Submitted` status reports relayer acceptance and a transaction ID; it does not currently poll the Nile receipt or prove successful execution.
 
@@ -261,5 +257,5 @@ Internal TestFlight builds expire after 90 days. Running the workflow again crea
 - The relayer has no authentication, rate limiting, persistence, or abuse controls.
 - The app reports submission, not finality; always inspect the Nile receipt for `SUCCESS` versus `REVERT` and confirm the resulting nonce.
 - Local HTTP is allowed only to simplify LAN testing; use TLS for any non-local deployment.
-- The iOS UI deliberately accepts 20-byte hex addresses to keep digest construction unambiguous.
+- The iOS UI accepts TRON Base58Check addresses and decodes them to 20-byte EVM addresses for digest construction.
 - The Nile chain ID is fixed at decimal `3448148188` (`0xcd8690dc`) in both the app and relayer.

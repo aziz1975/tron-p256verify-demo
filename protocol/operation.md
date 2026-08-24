@@ -21,6 +21,6 @@ digest = SHA256(ABI_ENCODE(
 
 The P-256 signature is transported as two unsigned, big-endian, exactly 32-byte values `r` and `s`. Signers normalize `s` to the lower half of the P-256 group order (`s = min(s, n - s)`) for precompile compatibility. The public key is transported as 32-byte affine coordinates `x` and `y` (the `0x04` X9.63 prefix is not included).
 
-Network addresses in APIs are lowercase `0x`-prefixed 20-byte hex. Convert TRON Base58Check addresses before digest construction. The chain ID is read from the deployed wallet through `operationDigest` or from the connected network, never supplied by an untrusted relayer.
+Network APIs may use TRON Base58Check addresses or lowercase `0x`-prefixed 20-byte hex. Base58Check addresses are validated and converted to their 20-byte EVM form before digest construction. The chain ID is read from the deployed wallet through `operationDigest` or from the connected network, never supplied by an untrusted relayer.
 
 This software is an unaudited demonstration and must not hold assets with real value.

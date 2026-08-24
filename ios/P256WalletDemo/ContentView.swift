@@ -10,13 +10,13 @@ struct ContentView: View {
                     Button("Create or load signing key") { model.createKey() }
                     if !model.publicKey.isEmpty { Text(model.publicKey).font(.caption).textSelection(.enabled) }
                 }
-                Section("Nile operation (20-byte hex addresses)") {
+                Section("Nile operation (TRON addresses)") {
                     LabeledField("Relayer URL", placeholder: "http://192.168.1.19:8787", text: $model.relayerURL)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.URL)
-                    LabeledField("Wallet address", placeholder: "0x…", text: $model.wallet)
+                    LabeledField("Wallet address", placeholder: "T…", text: $model.wallet)
                         .textInputAutocapitalization(.never)
-                    LabeledField("Destination address", placeholder: "0x…", text: $model.destination)
+                    LabeledField("Destination address", placeholder: "T…", text: $model.destination)
                         .textInputAutocapitalization(.never)
                     LabeledField("Value (SUN)", placeholder: "0", text: $model.valueSun)
                         .keyboardType(.numberPad)
