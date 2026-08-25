@@ -31,6 +31,56 @@ npm run nile:check
 
 The contract tests execute the actual `0x100` precompile under Foundry's Osaka EVM. The TypeScript tests independently reproduce the shared digest and sign it without double hashing.
 
+## P-256 keys in this project
+
+Each wallet user has one P-256 key pair:
+
+```text
+Private key: one secret 32-byte number
+Public key:  one curve point made from x (32 bytes) and y (32 bytes)
+```
+
+The `x` and `y` values are not two public keys. They are the two coordinates of one public key. Apple exposes that public key in uncompressed X9.63 form:
+
+```text
+04 || x || y
+1B    32B  32B  = 65 bytes total
+```
+
+The leading `04` means "uncompressed public key." The iOS app displays this 65-byte public key after **Create or load signing key** is tapped. The public key is safe to display and share. For wallet deployment, remove the leading `04`, put the next 32 bytes in `P256_PUBLIC_KEY_X`, and put the last 32 bytes in `P256_PUBLIC_KEY_Y`.
+
+On a physical iPhone, **Create or load signing key** does the following:
+
+1. It looks in Keychain for an opaque reference to the app's existing Secure Enclave P-256 private key.
+2. If the reference exists, CryptoKit reconnects to the same private key.
+3. If it does not exist, the Secure Enclave generates a new private key and the app saves its opaque reference in Keychain.
+4. The app derives and displays the corresponding public key. It never displays the private key.
+
+The Secure Enclave private key cannot be exported by this app. `key.dataRepresentation` is an opaque reference used to find the protected key again; it is not the raw 32-byte private key. When the user approves an operation with Face ID or the device passcode, the operation enters the Secure Enclave, is signed there, and only the signature values `r` and `s` come back out:
+
+```text
+operation -> Secure Enclave private key -> signature (r, s)
+                         private key stays inside
+```
+
+The smart-wallet contract stores only the public-key coordinates:
+
+```solidity
+bytes32 public immutable publicKeyX;
+bytes32 public immutable publicKeyY;
+```
+
+It uses those public values to check that `(r, s)` was produced by the matching private key. The private key is never sent to the relayer or the contract and is not stored in this repository.
+
+There is also a separate **relayer TRON EOA private key**, loaded from `NILE_PRIVATE_KEY`. The two private keys have different jobs:
+
+| Key | Where it is kept | What it does |
+| --- | --- | --- |
+| User P-256 private key | iPhone Secure Enclave | Authorizes a smart-wallet operation and produces `(r, s)` |
+| Relayer TRON private key | Relayer `.env` / process environment | Signs and pays for the outer TRON transaction |
+
+The relayer cannot authorize a different wallet operation with its TRON key. It can only submit the operation that the user's P-256 key signed. On the Simulator, the app substitutes a temporary software P-256 private key held in process memory; this is for tests and does not demonstrate Secure Enclave protection.
+
 ## Nile preparation
 
 1. Create a brand-new test-only TRON account. Never reuse a mainnet private key.
