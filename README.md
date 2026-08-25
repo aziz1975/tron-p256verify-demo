@@ -113,7 +113,7 @@ sequenceDiagram
         User->>Operator: Provide public x and y
         Operator->>Nile: Deploy wallet with public x and y
         Nile->>Wallet: Store publicKeyX and publicKeyY
-        Note over SE,Wallet: The private key stays in the Secure Enclave; only the public key is stored on-chain
+        Note over SE,Wallet: The private key stays in the Secure Enclave. Only the public key is stored on-chain.
     end
 
     rect rgb(240, 255, 240)
