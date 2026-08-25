@@ -81,6 +81,66 @@ There is also a separate **relayer TRON EOA private key**, loaded from `NILE_PRI
 
 The relayer cannot authorize a different wallet operation with its TRON key. It can only submit the operation that the user's P-256 key signed. On the Simulator, the app substitutes a temporary software P-256 private key held in process memory; this is for tests and does not demonstrate Secure Enclave protection.
 
+## End-to-end flow
+
+This diagram separates the one-time wallet setup from the flow that runs whenever the user approves an operation:
+
+```mermaid
+flowchart TD
+    subgraph Setup[One-time setup]
+        A[Tap: Create or load signing key] --> B{Existing key reference<br/>in iPhone Keychain?}
+        B -- Yes --> C[Reconnect to the existing<br/>Secure Enclave P-256 private key]
+        B -- No --> D[Secure Enclave generates<br/>a new P-256 private key]
+        D --> E[Save an opaque key reference<br/>in iPhone Keychain]
+        E --> C
+        C --> F[Derive and display public key<br/>04 + x + y]
+        F --> G[Deploy smart wallet with<br/>publicKeyX = x and publicKeyY = y]
+    end
+
+    subgraph Approval[Every approved operation]
+        H[User enters wallet, destination,<br/>SUN value, and current nonce] --> I[App adds a deadline<br/>current time + 5 minutes]
+        I --> J[App encodes wallet, Nile chain ID,<br/>destination, value, data hash,<br/>nonce, and deadline]
+        J --> K[User confirms with<br/>Face ID or passcode]
+        K --> L[Secure Enclave signs locally<br/>and returns only r and s]
+        L --> M[App sends the operation and r,s<br/>to POST /relay]
+    end
+
+    subgraph Relay[Relayer]
+        M --> N[Read wallet nonce and<br/>public key x,y from Nile]
+        N --> O{Nonce and deadline valid?}
+        O -- No --> X[Reject request]
+        O -- Yes --> P{P-256 signature valid?}
+        P -- No --> X
+        P -- Yes --> Q[Relayer signs the outer TRON<br/>transaction with NILE_PRIVATE_KEY]
+        Q --> R[Broadcast wallet.execute<br/>and pay network resource costs]
+    end
+
+    subgraph Chain[TRON Nile smart wallet]
+        R --> S{Contract nonce and<br/>deadline valid?}
+        S -- No --> Y[Revert]
+        S -- Yes --> T[Rebuild the same<br/>operation digest]
+        T --> U{P256VERIFY at 0x100<br/>accepts r,s with x,y?}
+        U -- No --> Y
+        U -- Yes --> V[Increment wallet nonce]
+        V --> W[Call destination using funds<br/>from the smart wallet]
+        W --> Z{Destination call succeeded?}
+        Z -- No --> Y
+        Z -- Yes --> AA[Emit Executed event<br/>and commit state changes]
+    end
+
+    R --> AB[App receives transaction ID<br/>and displays Submitted]
+    AB --> AC[Check the Nile receipt later<br/>for SUCCESS or REVERT]
+```
+
+The two signatures in the flow serve different purposes:
+
+```text
+User P-256 signature (r, s)  -> proves the user approved this exact wallet operation
+Relayer TRON signature       -> authorizes and pays for broadcasting the outer transaction
+```
+
+`Submitted` only means the relayer accepted and broadcast the transaction. The operation is complete only after the Nile receipt reports `SUCCESS`; a `REVERT` receipt means the wallet call did not take effect.
+
 ## Nile preparation
 
 1. Create a brand-new test-only TRON account. Never reuse a mainnet private key.
