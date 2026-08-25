@@ -83,53 +83,90 @@ The relayer cannot authorize a different wallet operation with its TRON key. It 
 
 ## End-to-end flow
 
-This diagram separates the one-time wallet setup from the flow that runs whenever the user approves an operation:
+The swimlanes below show which actor performs each step. Time moves from top to bottom.
 
 ```mermaid
-flowchart TD
-    subgraph Setup[One-time setup]
-        A[Tap: Create or load signing key] --> B{Existing key reference<br/>in iPhone Keychain?}
-        B -- Yes --> C[Reconnect to the existing<br/>Secure Enclave P-256 private key]
-        B -- No --> D[Secure Enclave generates<br/>a new P-256 private key]
-        D --> E[Save an opaque key reference<br/>in iPhone Keychain]
-        E --> C
-        C --> F[Derive and display public key<br/>04 + x + y]
-        F --> G[Deploy smart wallet with<br/>publicKeyX = x and publicKeyY = y]
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as iOS App
+    participant SE as Secure Enclave
+    participant Operator as Wallet Deployer
+    participant Relay as Relayer Server
+    participant Nile as TRON Nile Network
+    participant Wallet as P256 Smart Wallet
+    participant Target as Destination
+
+    rect rgb(235, 245, 255)
+        Note over User,Wallet: One-time key and wallet setup
+        User->>App: Tap Create or load signing key
+        App->>SE: Load the existing P-256 key
+        alt No existing key
+            SE->>SE: Generate a new P-256 private key
+            SE-->>App: Return an opaque key reference
+            App->>App: Save the reference in Keychain
+        else Existing key found
+            SE-->>App: Reconnect to the protected key
+        end
+        SE-->>App: Return public key 04 + x + y
+        App-->>User: Display the public key
+        User->>Operator: Provide public x and y
+        Operator->>Nile: Deploy wallet with public x and y
+        Nile->>Wallet: Store publicKeyX and publicKeyY
+        Note over SE,Wallet: The private key stays in the Secure Enclave; only the public key is stored on-chain
     end
 
-    subgraph Approval[Every approved operation]
-        H[User enters wallet, destination,<br/>SUN value, and current nonce] --> I[App adds a deadline<br/>current time + 5 minutes]
-        I --> J[App encodes wallet, Nile chain ID,<br/>destination, value, data hash,<br/>nonce, and deadline]
-        J --> K[User confirms with<br/>Face ID or passcode]
-        K --> L[Secure Enclave signs locally<br/>and returns only r and s]
-        L --> M[App sends the operation and r,s<br/>to POST /relay]
-    end
+    rect rgb(240, 255, 240)
+        Note over User,Target: Every Approve, sign, and relay operation
+        User->>App: Enter wallet, destination, SUN value, and nonce
+        User->>App: Tap Approve, sign, and relay
+        App->>App: Add 5-minute deadline and encode operation
+        App->>SE: Request P-256 signature
+        SE-->>User: Ask for Face ID or passcode
+        User-->>SE: Approve
+        SE->>SE: Hash and sign inside Secure Enclave
+        SE-->>App: Return signature r and s only
+        App->>Relay: POST /relay with operation, r, and s
 
-    subgraph Relay[Relayer]
-        M --> N[Read wallet nonce and<br/>public key x,y from Nile]
-        N --> O{Nonce and deadline valid?}
-        O -- No --> X[Reject request]
-        O -- Yes --> P{P-256 signature valid?}
-        P -- No --> X
-        P -- Yes --> Q[Relayer signs the outer TRON<br/>transaction with NILE_PRIVATE_KEY]
-        Q --> R[Broadcast wallet.execute<br/>and pay network resource costs]
-    end
+        Relay->>Wallet: Read nonce, publicKeyX, and publicKeyY
+        Wallet-->>Relay: Return current values
+        Relay->>Relay: Check format, nonce, and deadline
+        Relay->>Relay: Rebuild digest and verify P-256 signature
 
-    subgraph Chain[TRON Nile smart wallet]
-        R --> S{Contract nonce and<br/>deadline valid?}
-        S -- No --> Y[Revert]
-        S -- Yes --> T[Rebuild the same<br/>operation digest]
-        T --> U{P256VERIFY at 0x100<br/>accepts r,s with x,y?}
-        U -- No --> Y
-        U -- Yes --> V[Increment wallet nonce]
-        V --> W[Call destination using funds<br/>from the smart wallet]
-        W --> Z{Destination call succeeded?}
-        Z -- No --> Y
-        Z -- Yes --> AA[Emit Executed event<br/>and commit state changes]
-    end
+        alt Relayer check fails
+            Relay-->>App: Reject request with an error
+            App-->>User: Display Error
+        else Relayer check passes
+            Relay->>Relay: Sign outer transaction with NILE_PRIVATE_KEY
+            Relay->>Nile: Broadcast wallet.execute and pay resource costs
+            Nile-->>Relay: Return transaction ID
+            Relay-->>App: Return transaction ID and digest
+            App-->>User: Display Submitted
 
-    R --> AB[App receives transaction ID<br/>and displays Submitted]
-    AB --> AC[Check the Nile receipt later<br/>for SUCCESS or REVERT]
+            Nile->>Wallet: Execute destination, value, data, nonce, deadline, r, s
+            Wallet->>Wallet: Check nonce and deadline
+            Wallet->>Wallet: Rebuild the operation digest
+            Wallet->>Nile: Verify digest, r, s, x, y at P256VERIFY 0x100
+            Nile-->>Wallet: Valid or invalid
+
+            alt Wallet validation fails
+                Wallet-->>Nile: Revert transaction
+            else Wallet validation passes
+                Wallet->>Wallet: Increment nonce
+                Wallet->>Target: Call with data and wallet funds
+                alt Destination call fails
+                    Target-->>Wallet: Revert
+                    Wallet-->>Nile: Revert and restore nonce
+                else Destination call succeeds
+                    Target-->>Wallet: Return result
+                    Wallet->>Wallet: Emit Executed event
+                    Wallet-->>Nile: Commit successful execution
+                end
+            end
+
+            Note over User,Nile: Submitted is not final. Check the Nile receipt for SUCCESS or REVERT.
+        end
+    end
 ```
 
 The two signatures in the flow serve different purposes:
