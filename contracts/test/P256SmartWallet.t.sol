@@ -100,4 +100,26 @@ contract P256SmartWalletTest {
             address(wallet).call(abi.encodeCall(wallet.execute, (address(receiver), 0, data, 0, deadline, r, s)));
         require(!replayOk && bytes4(reason) == P256SmartWallet.InvalidNonce.selector);
     }
+
+    function testHighSValueTransfer() public {
+        uint256 value = 1 ether;
+        uint256 deadline = 2_000_000_000;
+        bytes32 digest = wallet.operationDigest(address(receiver), value, bytes(""), 0, deadline);
+        (bytes32 r, bytes32 s) = vm.signP256(1, digest);
+        uint256 n = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551;
+        if (uint256(s) <= n / 2) s = bytes32(n - uint256(s));
+        wallet.execute(address(receiver), value, bytes(""), 0, deadline, r, s);
+        require(address(receiver).balance == value && address(wallet).balance == 9 ether);
+        require(wallet.nonce() == 1 && receiver.calls() == 1);
+    }
+
+    function testDestinationRevertRestoresNonce() public {
+        bytes memory data = abi.encodeCall(receiver.fail, ());
+        uint256 deadline = 2_000_000_000;
+        (bytes32 r, bytes32 s) = vm.signP256(1, wallet.operationDigest(address(receiver), 0, data, 0, deadline));
+        (bool ok, bytes memory reason) =
+            address(wallet).call(abi.encodeCall(wallet.execute, (address(receiver), 0, data, 0, deadline, r, s)));
+        require(!ok && bytes4(reason) == P256SmartWallet.CallFailed.selector);
+        require(wallet.nonce() == 0 && receiver.calls() == 0);
+    }
 }

@@ -1,6 +1,6 @@
 # TRON Nile P256VERIFY demo
 
-An end-to-end, unaudited proof of concept for authorizing a TRON smart-contract wallet with an Apple Secure Enclave P-256 key. An ordinary Nile EOA relays the outer transaction; the wallet verifies the signed operation through TIP-7951 at `0x100` and executes it.
+An end-to-end, unaudited proof of concept for authorizing a TRON smart-contract wallet with an Apple Secure Enclave P-256 key. An ordinary Nile EOA relays the outer transaction; the wallet uses OpenZeppelin's P256 library through `P256Verifier` to verify the signed operation through TIP-7951 at `0x100` and executes it.
 
 > **Demo only:** do not use these contracts or services with assets of real value. There is no recovery, key rotation, spend limit, relayer authentication, audit, or production hardening.
 
@@ -30,6 +30,18 @@ npm run nile:check
 ```
 
 The contract tests execute the actual `0x100` precompile under Foundry's Osaka EVM. The TypeScript tests independently reproduce the shared digest and sign it without double hashing.
+
+## OpenZeppelin P-256 verification
+
+Both `P256SmartWallet` and `P256VerifyProbe` use [P256Verifier](contracts/src/P256Verifier.sol), which imports `@openzeppelin/contracts/utils/cryptography/P256.sol` from the npm dependency pinned to **5.6.1** and calls `P256.verifyNative`. Foundry resolves the package from `node_modules` through the remapping in [foundry.toml](foundry.toml), so install npm dependencies before running `forge build` or `forge test`.
+
+- Verification requires the native P-256 precompile at `0x100`. The wrapper does not call `P256.verify` or `P256.verifySolidity`, so there is no Solidity fallback on unsupported chains.
+- OpenZeppelin requires low-S signatures. The wrapper converts a high-S value to `N - s`, where `N` is the P-256 group order, preserving the original verifier's acceptance of both S forms. The iOS signer already produces low-S signatures, and the relayer's local check requires them.
+- Before calling `verifyNative`, the wrapper checks native support with a fixed valid signature. If that check fails, it returns `false` rather than allowing OpenZeppelin's `MissingPrecompile` error. The probe therefore reports `false`; wallet execution reverts with `InvalidSignature`.
+
+Contract interfaces and operation digests are unchanged. The support check adds a native verification call and therefore gas overhead. Tests cover comparison with the original verifier, high-S signatures, invalid inputs, missing-precompile behavior, execution, value transfers, replay protection, and nonce rollback.
+
+Existing Nile deployment addresses below refer to the earlier bytecode. Local tests exercise the OpenZeppelin version; testing that version on Nile requires deploying the newly built artifacts.
 
 ## P-256 keys in this project
 
@@ -83,13 +95,14 @@ The relayer cannot authorize a different wallet operation with its TRON key. It 
 
 ## End-to-end flow
 
-This high-level diagram focuses on the three main parts of the runtime flow. Time moves from top to bottom.
+This high-level diagram focuses on the iOS app, relayer, and smart wallet, with the Nile network shown separately to distinguish submission from execution. Time moves from top to bottom.
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant App as iOS App
     participant Relay as Relayer Server
+    participant Nile as TRON Nile Network
     participant Wallet as P256 Smart Wallet
 
     App->>App: Build and P-256 sign the operation
@@ -97,12 +110,16 @@ sequenceDiagram
     Relay->>Wallet: Read current nonce and public key
     Wallet-->>Relay: Return nonce and public key x,y
     Relay->>Relay: Validate operation and signature
-    Relay->>Wallet: Submit execute with the relayer TRON account
-    Relay-->>App: Return submitted transaction ID
+    Relay->>Nile: Broadcast execute with the relayer TRON account
+    Nile-->>Relay: Accept broadcast and return transaction ID
+    Relay-->>App: Return transaction ID as Submitted
+    Note over App,Nile: Submitted means accepted for broadcast, not executed successfully
+    Nile->>Wallet: Include transaction and call execute
     Wallet->>Wallet: Verify nonce, deadline, and P-256 signature
     Wallet->>Wallet: Increment nonce and call destination
     Wallet->>Wallet: Complete successfully or revert
-    Note over App,Wallet: Check the Nile receipt for the final result
+    Wallet-->>Nile: Record SUCCESS or REVERT receipt
+    Note over App,Nile: The current app does not poll this receipt; check it separately
 ```
 
 The iOS app authorizes the operation, the relayer pays to submit it, and the smart wallet verifies and executes it. See the [detailed end-to-end sequence](docs/end-to-end-flow.md) for key creation, Face ID, network, destination-call, and failure paths. `Submitted` is not final; check the Nile receipt for `SUCCESS` or `REVERT`.
@@ -124,6 +141,8 @@ CONFIRM_NILE_BROADCAST=I_UNDERSTAND
 Do not set that value until you intentionally approve Nile transactions.
 
 ## Nile deployment
+
+The addresses and transaction results in this section record deployments of the earlier verifier bytecode. They do not demonstrate the OpenZeppelin version on Nile. To test the current implementation, rebuild and deploy a new probe and wallet, then update the iOS wallet address and fund the new wallet before a value transfer. The existing wallets use an immutable signing key and provide no upgrade mechanism.
 
 The verifier probe and P-256 wallet have been deployed on Nile. The probe at `TJWxpY7PCVVqPMdWbaKZ5ffPH6Xwo7XjN6` (`415dc27a9fe41bdca6b7e04a3476cf7fd31e0698a7`) returned `true` for the valid test vector and `false` for its tampered form, confirming that Nile executed the `P256VERIFY` precompile as expected.
 
@@ -162,6 +181,8 @@ The following deployment steps require explicit approval because they broadcast 
 6. Before testing a nonzero value transfer, fund the deployed wallet with a small amount of Nile test TRX. The transfer value comes from the smart-wallet balance; the relayer account pays only the outer transaction's resource costs.
 
 ### Confirmed iPhone-to-Nile tests
+
+These historical tests used the earlier verifier implementation.
 
 The complete physical-iPhone flow has been exercised successfully. In each successful operation the iPhone Secure Enclave signed the canonical payload, the LAN relayer verified it, and the deployed wallet verified it through Nile's P-256 precompile before `execute` called `TQGfKPHs3AwiBT44ibkCU64u1G4ttojUXU` (`0x9cdeccbed8527dca387ee1116bc3915de88d714a`). The latest test used Base58Check addresses directly in the iOS UI and transferred a nonzero value.
 

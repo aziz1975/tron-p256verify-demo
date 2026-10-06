@@ -52,7 +52,11 @@ app.post("/relay", async (request, response) => {
     const onChainNonce = await readFromNile("nonce", async () => String(await wallet.nonce().call()));
     const x = await readFromNile("publicKeyX", async () => String(await wallet.publicKeyX().call()));
     const y = await readFromNile("publicKeyY", async () => String(await wallet.publicKeyY().call()));
-    if (BigInt(onChainNonce.toString()) !== BigInt(body.nonce)) throw new Error("Nonce does not match wallet");
+    if (BigInt(onChainNonce) !== BigInt(body.nonce)) {
+      throw new Error(
+        `Nonce does not match wallet ${walletAddress}: expected ${onChainNonce}, received ${body.nonce}`,
+      );
+    }
     if (BigInt(body.deadline) <= BigInt(Math.floor(Date.now() / 1000))) throw new Error("Operation has expired");
 
     const digest = operationDigest({
