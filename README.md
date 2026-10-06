@@ -119,7 +119,7 @@ sequenceDiagram
     Wallet->>Wallet: Increment nonce and call destination
     Wallet->>Wallet: Complete successfully or revert
     Wallet-->>Nile: Record SUCCESS or REVERT receipt
-    Note over App,Nile: The current app does not poll this receipt; check it separately
+    Note over App,Nile: The current app does not poll this receipt. Check it separately.
 ```
 
 The iOS app authorizes the operation, the relayer pays to submit it, and the smart wallet verifies and executes it. See the [detailed end-to-end sequence](docs/end-to-end-flow.md) for key creation, Face ID, network, destination-call, and failure paths. `Submitted` is not final; check the Nile receipt for `SUCCESS` or `REVERT`.
